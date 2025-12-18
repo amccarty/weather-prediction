@@ -88,22 +88,22 @@ jobs:
         pip install -r requirements.txt
         pip install outerbounds
 
-    - name: Deploy Scheduled Flow
-      env:
-        OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
+    - name: Deploy Training Flow to Staging
       run: |
-        python flows/climate_data_refresh_flow.py --environment=staging create
+        cd flows
+        python climate_training_flow.py run
+
+    - name: Deploy Refresh Flow to Staging
+      run: |
+        cd flows
+        python climate_data_refresh_flow.py run
 
     - name: Deploy API to Outerbounds Staging
-      env:
-        OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
       run: |
         chmod +x deployments/climate-api/deploy.sh
         ./deployments/climate-api/deploy.sh staging
 
     - name: Deploy UI to Outerbounds Staging
-      env:
-        OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
       run: |
         chmod +x deployments/climate-ui/deploy.sh
         ./deployments/climate-ui/deploy.sh staging
@@ -129,22 +129,22 @@ jobs:
         pip install -r requirements.txt
         pip install outerbounds
 
-    - name: Deploy Scheduled Flow
-      env:
-        OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
+    - name: Deploy Training Flow to Production
       run: |
-        python flows/climate_data_refresh_flow.py --environment=production create
+        cd flows
+        python climate_training_flow.py run
+
+    - name: Deploy Refresh Flow to Production
+      run: |
+        cd flows
+        python climate_data_refresh_flow.py run
 
     - name: Deploy API to Outerbounds Production
-      env:
-        OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
       run: |
         chmod +x deployments/climate-api/deploy.sh
         ./deployments/climate-api/deploy.sh production
 
     - name: Deploy UI to Outerbounds Production
-      env:
-        OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
       run: |
         chmod +x deployments/climate-ui/deploy.sh
         ./deployments/climate-ui/deploy.sh production
