@@ -27,7 +27,7 @@ echo "========================================="
 outerbounds app deploy \
   --name "$APP_NAME" \
   --project "$PROJECT_NAME" \
-  --python-version 3.10 \
+  --python 3.10 \
   --package-src-path deployments/climate-api \
   --command "python app.py" \
   --requirements requirements.txt \
