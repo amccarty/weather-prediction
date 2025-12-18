@@ -11,7 +11,7 @@ if [ "$ENVIRONMENT" = "production" ]; then
   APP_NAME="climate-api"
   REPLICAS=3
 else
-  APP_NAME="climate-api-staging"
+  APP_NAME="climate-stg"
   REPLICAS=1
 fi
 
@@ -29,15 +29,15 @@ outerbounds app deploy \
   --project "$PROJECT_NAME" \
   --python 3.10 \
   --package-src-path deployments/climate-api \
-  --command "python app.py" \
-  --requirements requirements.txt \
+  --dep-from-requirements requirements.txt \
   --cpu 2 \
   --memory 8192 \
-  --replicas "$REPLICAS" \
+  --fixed-replicas "$REPLICAS" \
   --min-replicas 1 \
   --max-replicas 3 \
-  --scaling-metric avg_rpm=100 \
-  --public --port 8000
+  --scaling-rpm 100 \
+  --public-access --port 8000 \
+  python app.py
 
 echo ""
 echo "========================================="
