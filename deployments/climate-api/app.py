@@ -9,9 +9,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
-from typing import Dict, List, Optional
-import json
-from datetime import datetime
+from typing import Dict
 from metaflow import Flow, namespace
 import logging
 
@@ -22,7 +20,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Climate Impact Predictor API",
     description="REST API for climate change impact predictions",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Add CORS middleware to allow web UI to connect
@@ -33,6 +31,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Global state for loaded models and predictions
 class ModelRegistry:
@@ -55,7 +54,7 @@ class ModelRegistry:
 
             # Load training flow artifacts
             logger.info("Loading latest ClimateTrainingFlow...")
-            training_flow = Flow('ClimateTrainingFlow')
+            training_flow = Flow("ClimateTrainingFlow")
             training_run = training_flow.latest_successful_run
 
             if training_run:
@@ -68,7 +67,7 @@ class ModelRegistry:
 
             # Load refresh flow artifacts
             logger.info("Loading latest ClimateDataRefreshFlow...")
-            refresh_flow = Flow('ClimateDataRefreshFlow')
+            refresh_flow = Flow("ClimateDataRefreshFlow")
             refresh_run = refresh_flow.latest_successful_run
 
             if refresh_run:
@@ -76,7 +75,9 @@ class ModelRegistry:
                 self.anomalies = refresh_run.data.all_anomalies
                 self.refresh_run_id = refresh_run.id
                 self.last_updated = refresh_run.data.fetch_timestamp
-                logger.info(f"Loaded predictions from refresh run: {self.refresh_run_id}")
+                logger.info(
+                    f"Loaded predictions from refresh run: {self.refresh_run_id}"
+                )
             else:
                 logger.warning("No successful ClimateDataRefreshFlow runs found")
 
@@ -86,8 +87,10 @@ class ModelRegistry:
             # Don't raise in deployment environment - gracefully degrade to mock data
             pass
 
+
 # Initialize model registry
 registry = ModelRegistry()
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -96,17 +99,21 @@ async def startup_event():
     registry.load_latest_artifacts()
 
     if registry.models and registry.predictions:
-        logger.info(f"✓ Loaded artifacts successfully")
+        logger.info("✓ Loaded artifacts successfully")
         logger.info(f"  - Training run: {registry.training_run_id}")
         logger.info(f"  - Refresh run: {registry.refresh_run_id}")
     else:
         logger.warning("⚠ Metaflow artifacts not loaded - serving mock data")
         logger.info("API is ready (mock mode)")
 
+
 class PredictionRequest(BaseModel):
     latitude: float = Field(..., ge=-90, le=90, description="Latitude")
     longitude: float = Field(..., ge=-180, le=180, description="Longitude")
-    horizon_years: int = Field(5, ge=1, le=50, description="Prediction horizon in years")
+    horizon_years: int = Field(
+        5, ge=1, le=50, description="Prediction horizon in years"
+    )
+
 
 class RegionImpact(BaseModel):
     region_name: str
@@ -116,6 +123,7 @@ class RegionImpact(BaseModel):
     extreme_event_probabilities: Dict[str, float]
     confidence_intervals: Dict[str, Dict[str, float]]
     last_updated: str
+
 
 @app.get("/")
 def root():
@@ -130,14 +138,17 @@ def root():
             "dashboard": "/dashboard/{region_name}",
             "alerts": "/alerts",
             "compare": "/compare",
-            "status": "/status"
+            "status": "/status",
         },
         "loaded_runs": {
             "training": registry.training_run_id,
             "refresh": registry.refresh_run_id,
-            "last_updated": str(registry.last_updated) if registry.last_updated else None
-        }
+            "last_updated": (
+                str(registry.last_updated) if registry.last_updated else None
+            ),
+        },
     }
+
 
 @app.get("/status")
 def get_status():
@@ -149,8 +160,11 @@ def get_status():
         "training_run_id": registry.training_run_id,
         "refresh_run_id": registry.refresh_run_id,
         "last_updated": str(registry.last_updated) if registry.last_updated else None,
-        "available_regions": list(registry.predictions.keys()) if registry.predictions else []
+        "available_regions": (
+            list(registry.predictions.keys()) if registry.predictions else []
+        ),
     }
+
 
 @app.post("/refresh")
 def refresh_artifacts():
@@ -161,15 +175,19 @@ def refresh_artifacts():
             "status": "success",
             "training_run_id": registry.training_run_id,
             "refresh_run_id": registry.refresh_run_id,
-            "message": "Artifacts reloaded successfully"
+            "message": "Artifacts reloaded successfully",
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to reload artifacts: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to reload artifacts: {str(e)}"
+        )
+
 
 @app.get("/health")
 def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "climate-api"}
+
 
 @app.get("/predictions/{region_name}", response_model=RegionImpact)
 def get_region_predictions(region_name: str) -> RegionImpact:
@@ -199,7 +217,7 @@ def get_region_predictions(region_name: str) -> RegionImpact:
         else:
             raise HTTPException(
                 status_code=404,
-                detail=f"Region '{region_name}' not found. Available regions: {available_regions}"
+                detail=f"Region '{region_name}' not found. Available regions: {available_regions}",
             )
 
     # Get predictions from loaded artifacts
@@ -209,59 +227,53 @@ def get_region_predictions(region_name: str) -> RegionImpact:
         region_name=region_name,
         current_temp=25.5,  # TODO: Get from current observations
         predicted_temp_change={
-            "1_year": pred_data['temperature']['1_year'],
-            "5_year": pred_data['temperature']['5_year'],
-            "10_year": pred_data['temperature']['10_year']
+            "1_year": pred_data["temperature"]["1_year"],
+            "5_year": pred_data["temperature"]["5_year"],
+            "10_year": pred_data["temperature"]["10_year"],
         },
         precipitation_change={
-            "1_year": pred_data['precipitation']['1_year'],
-            "5_year": pred_data['precipitation']['5_year'],
-            "10_year": pred_data['precipitation']['10_year']
+            "1_year": pred_data["precipitation"]["1_year"],
+            "5_year": pred_data["precipitation"]["5_year"],
+            "10_year": pred_data["precipitation"]["10_year"],
         },
-        extreme_event_probabilities=pred_data['extreme_events'],
+        extreme_event_probabilities=pred_data["extreme_events"],
         confidence_intervals={
             "temperature": {"lower": -0.5, "upper": 0.8},
-            "precipitation": {"lower": -3.0, "upper": -1.0}
+            "precipitation": {"lower": -3.0, "upper": -1.0},
         },
-        last_updated=str(registry.last_updated) if registry.last_updated else "unknown"
+        last_updated=str(registry.last_updated) if registry.last_updated else "unknown",
     )
+
 
 def _get_mock_predictions(region_name: str) -> RegionImpact:
     """Return mock data when no predictions are loaded"""
     return RegionImpact(
         region_name=region_name,
         current_temp=25.5,
-        predicted_temp_change={
-            "1_year": 0.3,
-            "5_year": 1.8,
-            "10_year": 3.2
-        },
-        precipitation_change={
-            "1_year": -2.0,
-            "5_year": -8.5,
-            "10_year": -15.0
-        },
+        predicted_temp_change={"1_year": 0.3, "5_year": 1.8, "10_year": 3.2},
+        precipitation_change={"1_year": -2.0, "5_year": -8.5, "10_year": -15.0},
         extreme_event_probabilities={
             "heatwave": 0.15,
             "drought": 0.12,
             "flood": 0.08,
-            "cold_snap": 0.05
+            "cold_snap": 0.05,
         },
         confidence_intervals={
             "temperature": {"lower": -0.5, "upper": 0.8},
-            "precipitation": {"lower": -3.0, "upper": -1.0}
+            "precipitation": {"lower": -3.0, "upper": -1.0},
         },
-        last_updated="mock-data"
+        last_updated="mock-data",
     )
+
 
 @app.post("/predict", response_model=RegionImpact)
 def predict_custom_location(request: PredictionRequest) -> RegionImpact:
     """
     Generate predictions for custom latitude/longitude
-    
+
     Args:
         request: PredictionRequest with location and horizon
-    
+
     Returns:
         RegionImpact with climate predictions
     """
@@ -269,34 +281,27 @@ def predict_custom_location(request: PredictionRequest) -> RegionImpact:
     return RegionImpact(
         region_name=f"Custom ({request.latitude}, {request.longitude})",
         current_temp=22.0,
-        predicted_temp_change={
-            "1_year": 0.2,
-            "5_year": 1.5,
-            "10_year": 2.8
-        },
-        precipitation_change={
-            "1_year": -1.0,
-            "5_year": -5.0,
-            "10_year": -10.0
-        },
+        predicted_temp_change={"1_year": 0.2, "5_year": 1.5, "10_year": 2.8},
+        precipitation_change={"1_year": -1.0, "5_year": -5.0, "10_year": -10.0},
         extreme_event_probabilities={
             "heatwave": 0.10,
             "drought": 0.08,
             "flood": 0.06,
-            "cold_snap": 0.04
+            "cold_snap": 0.04,
         },
         confidence_intervals={
             "temperature": {"lower": -0.3, "upper": 0.5},
-            "precipitation": {"lower": -2.0, "upper": -0.5}
+            "precipitation": {"lower": -2.0, "upper": -0.5},
         },
-        last_updated="2024-12-15T10:00:00Z"
+        last_updated="2024-12-15T10:00:00Z",
     )
+
 
 @app.get("/map", response_class=HTMLResponse)
 def get_interactive_map():
     """
     Generate interactive map with climate impacts
-    
+
     Returns:
         HTML page with Folium map
     """
@@ -316,14 +321,15 @@ def get_interactive_map():
     """
     return HTMLResponse(content=html_content)
 
+
 @app.get("/dashboard/{region_name}", response_class=HTMLResponse)
 def get_dashboard(region_name: str):
     """
     Interactive dashboard with charts for a region
-    
+
     Args:
         region_name: Name of the region
-    
+
     Returns:
         HTML page with Plotly charts
     """
@@ -343,6 +349,7 @@ def get_dashboard(region_name: str):
     """
     return HTMLResponse(content=html_content)
 
+
 @app.get("/alerts")
 def get_active_alerts():
     """
@@ -354,42 +361,47 @@ def get_active_alerts():
     # Check if anomalies are loaded
     if registry.anomalies is None:
         logger.warning("No anomalies loaded, returning empty list")
-        return {
-            "alerts": [],
-            "count": 0,
-            "message": "No anomaly data loaded yet"
-        }
+        return {"alerts": [], "count": 0, "message": "No anomaly data loaded yet"}
 
     # Convert anomalies to alert format
     alerts = []
     for anomaly in registry.anomalies:
-        severity = "high" if anomaly['probability'] > 0.25 else "medium" if anomaly['probability'] > 0.15 else "low"
-        alerts.append({
-            "type": anomaly['type'],
-            "region": anomaly['region'],
-            "probability": anomaly['probability'],
-            "severity": severity,
-            "issued_at": str(registry.last_updated) if registry.last_updated else "unknown"
-        })
+        severity = (
+            "high"
+            if anomaly["probability"] > 0.25
+            else "medium" if anomaly["probability"] > 0.15 else "low"
+        )
+        alerts.append(
+            {
+                "type": anomaly["type"],
+                "region": anomaly["region"],
+                "probability": anomaly["probability"],
+                "severity": severity,
+                "issued_at": (
+                    str(registry.last_updated) if registry.last_updated else "unknown"
+                ),
+            }
+        )
 
     return {
         "alerts": alerts,
         "count": len(alerts),
-        "last_updated": str(registry.last_updated) if registry.last_updated else None
+        "last_updated": str(registry.last_updated) if registry.last_updated else None,
     }
+
 
 @app.get("/compare")
 def compare_regions(
     region1: str = Query(..., description="First region name"),
-    region2: str = Query(..., description="Second region name")
+    region2: str = Query(..., description="Second region name"),
 ):
     """
     Compare climate impacts between two regions
-    
+
     Args:
         region1: Name of first region
         region2: Name of second region
-    
+
     Returns:
         Comparison data
     """
@@ -400,10 +412,12 @@ def compare_regions(
         "comparison": {
             "temperature_change_diff": 0.5,
             "precipitation_change_diff": -3.0,
-            "higher_risk_region": region1
-        }
+            "higher_risk_region": region1,
+        },
     }
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

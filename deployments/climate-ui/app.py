@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Climate Prediction Dashboard",
     description="Web UI for Climate Impact Predictor",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Get the directory where this script is located
@@ -28,11 +28,13 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 # Mount static files directory
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+
 @app.get("/")
 def read_root():
     """Serve the main dashboard page"""
     index_path = os.path.join(STATIC_DIR, "index.html")
     return FileResponse(index_path)
+
 
 @app.get("/health")
 def health_check():
@@ -41,11 +43,13 @@ def health_check():
         "status": "healthy",
         "service": "climate-ui",
         "static_dir": STATIC_DIR,
-        "static_exists": os.path.exists(STATIC_DIR)
+        "static_exists": os.path.exists(STATIC_DIR),
     }
+
 
 if __name__ == "__main__":
     import uvicorn
+
     logger.info("Starting Climate Prediction Dashboard...")
     logger.info(f"Static files directory: {STATIC_DIR}")
     uvicorn.run(app, host="0.0.0.0", port=8001)
