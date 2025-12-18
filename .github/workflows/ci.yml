@@ -93,16 +93,27 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    
-    - name: Deploy to Outerbounds Staging
+        pip install outerbounds
+
+    - name: Deploy Scheduled Flow
       env:
         OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
       run: |
-        # Deploy scheduled flows
         python flows/climate_data_refresh_flow.py --environment=staging create
-        
-        # Deploy API
-        python deployments/climate-api/deploy.py --environment=staging
+
+    - name: Deploy API to Outerbounds Staging
+      env:
+        OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
+      run: |
+        chmod +x deployments/climate-api/deploy.sh
+        ./deployments/climate-api/deploy.sh staging
+
+    - name: Deploy UI to Outerbounds Staging
+      env:
+        OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
+      run: |
+        chmod +x deployments/climate-ui/deploy.sh
+        ./deployments/climate-ui/deploy.sh staging
 
   deploy-production:
     name: Deploy to Production
@@ -130,17 +141,28 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    
-    - name: Deploy to Outerbounds Production
+        pip install outerbounds
+
+    - name: Deploy Scheduled Flow
       env:
         OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
       run: |
-        # Deploy scheduled flows
         python flows/climate_data_refresh_flow.py --environment=production create
-        
-        # Deploy API
-        python deployments/climate-api/deploy.py --environment=production
-    
+
+    - name: Deploy API to Outerbounds Production
+      env:
+        OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
+      run: |
+        chmod +x deployments/climate-api/deploy.sh
+        ./deployments/climate-api/deploy.sh production
+
+    - name: Deploy UI to Outerbounds Production
+      env:
+        OUTERBOUNDS_API_KEY: ${{ secrets.OUTERBOUNDS_API_KEY }}
+      run: |
+        chmod +x deployments/climate-ui/deploy.sh
+        ./deployments/climate-ui/deploy.sh production
+
     - name: Create release
       uses: actions/create-release@v1
       env:

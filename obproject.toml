@@ -1,11 +1,18 @@
+platform = 'merced.obp.outerbounds.com'
+project = 'climate-prediction'
+title = 'Climate Change Impact Predictor'
+
 [project]
-name = "weather-prediction"
+name = "climate-prediction"
 version = "0.1.0"
 description = "Climate Change Impact Predictor using ML and public datasets"
 
 [project.settings]
 default_branch = "main"
 python_version = "3.10"
+
+[dev-assets]
+branch = 'main'
 
 [project.dependencies]
 metaflow = ">=2.11.0"
@@ -34,7 +41,7 @@ schedule = "manual"
 [flows.climate-data-refresh]
 file = "flows/climate_data_refresh_flow.py"
 class = "ClimateDataRefreshFlow"
-schedule = "0 */6 * * *"  # Every 6 hours
+schedule = "0 */12 * * *"  # Every 12 hours
 
 [deployments.climate-api]
 file = "deployments/climate-api/app.py"

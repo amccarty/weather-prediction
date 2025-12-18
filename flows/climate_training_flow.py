@@ -9,7 +9,7 @@ feature engineering, and trains three models:
 3. Extreme event classification (XGBoost)
 """
 
-from metaflow import FlowSpec, step, card, conda, resources, Parameter, batch
+from metaflow import FlowSpec, step, card, conda, resources, Parameter
 from metaflow.cards import Markdown, Table, Image
 import sys
 
@@ -48,8 +48,7 @@ class ClimateTrainingFlow(FlowSpec):
             self.fetch_reanalysis_data
         )
     
-    @conda(packages={'xarray': '2023.12.0', 'netCDF4': '1.6.5', 'requests': '2.31.0'})
-    @batch(memory=16000, cpu=4)
+    @resources(memory=16000, cpu=4)
     @step
     def fetch_noaa_data(self):
         """Fetch NOAA weather station data"""
@@ -67,8 +66,7 @@ class ClimateTrainingFlow(FlowSpec):
         print(f"Fetched NOAA data for {self.lookback_years} years")
         self.next(self.join_data)
     
-    @conda(packages={'rasterio': '1.3.9', 'numpy': '1.26.0'})
-    @batch(memory=32000, cpu=8)
+    @resources(memory=32000, cpu=8)
     @step
     def fetch_satellite_data(self):
         """Fetch NASA MODIS satellite imagery"""
@@ -86,8 +84,7 @@ class ClimateTrainingFlow(FlowSpec):
         print("Fetched satellite imagery composites")
         self.next(self.join_data)
     
-    @conda(packages={'cdsapi': '0.6.1', 'xarray': '2023.12.0'})
-    @batch(memory=24000, cpu=4)
+    @resources(memory=24000, cpu=4)
     @step
     def fetch_reanalysis_data(self):
         """Fetch ERA5 climate reanalysis data"""
@@ -110,18 +107,20 @@ class ClimateTrainingFlow(FlowSpec):
     def join_data(self, inputs):
         """Merge all data sources into unified dataset"""
         print("Merging data sources...")
-        
+
+        # Merge attributes from any input (they all have the same values from start)
+        self.merge_artifacts(inputs, include=['lat', 'lon', 'radius_km'])
+
         # Combine data from parallel branches
         self.combined_data = {
             'noaa': inputs.fetch_noaa_data.noaa_data,
             'satellite': inputs.fetch_satellite_data.satellite_data,
             'era5': inputs.fetch_reanalysis_data.era5_data
         }
-        
+
         print("Data merge complete")
         self.next(self.feature_engineering)
     
-    @conda(packages={'scikit-learn': '1.3.2', 'pandas': '2.1.4', 'numpy': '1.26.0'})
     @step
     def feature_engineering(self):
         """Create features for ML models"""
@@ -150,12 +149,7 @@ class ClimateTrainingFlow(FlowSpec):
             self.train_extreme_events_model
         )
     
-    @resources(gpu=1, memory=32000)
-    @conda(packages={
-        'torch': '2.1.0',
-        'pytorch-lightning': '2.1.0',
-        'transformers': '4.35.0'
-    })
+    @resources(cpu=4, memory=32000)
     @step
     def train_temperature_model(self):
         """Train temperature prediction model (Transformer-based)"""
@@ -172,8 +166,7 @@ class ClimateTrainingFlow(FlowSpec):
         print("Temperature model training complete")
         self.next(self.join_models)
     
-    @resources(gpu=1, memory=32000)
-    @conda(packages={'torch': '2.1.0', 'pytorch-lightning': '2.1.0'})
+    @resources(cpu=4, memory=32000)
     @step
     def train_precipitation_model(self):
         """Train precipitation pattern prediction"""
@@ -190,8 +183,7 @@ class ClimateTrainingFlow(FlowSpec):
         print("Precipitation model training complete")
         self.next(self.join_models)
     
-    @resources(gpu=1, memory=24000)
-    @conda(packages={'xgboost': '2.0.3', 'lightgbm': '4.1.0'})
+    @resources(cpu=4, memory=24000)
     @step
     def train_extreme_events_model(self):
         """Train extreme weather event classifier"""
@@ -214,20 +206,23 @@ class ClimateTrainingFlow(FlowSpec):
     def join_models(self, inputs):
         """Combine all models and create evaluation dashboard"""
         print("Combining models and generating evaluation cards...")
-        
+
+        # Merge attributes from inputs
+        self.merge_artifacts(inputs, include=['lat', 'lon', 'radius_km'])
+
         # Store all models
         self.models = {
             'temperature': inputs.train_temperature_model.temp_model,
             'precipitation': inputs.train_precipitation_model.precip_model,
             'extreme_events': inputs.train_extreme_events_model.extreme_model
         }
-        
+
         self.metrics = {
             'temperature': inputs.train_temperature_model.temp_metrics,
             'precipitation': inputs.train_precipitation_model.precip_metrics,
             'extreme_events': inputs.train_extreme_events_model.extreme_metrics
         }
-        
+
         # Generate Metaflow card
         from metaflow import current
         current.card.append(Markdown(f"# Climate Model Training Results"))

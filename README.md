@@ -22,7 +22,7 @@ The project consists of three main flows:
 ## Project Structure
 
 ```
-weather-prediction/
+climate-prediction/
 ├── .github/workflows/          # GitHub Actions for CI/CD
 ├── data/                       # Data assets and schemas
 │   └── climate-observations/
@@ -51,8 +51,8 @@ weather-prediction/
 
 ```bash
 # Clone the repository
-git clone https://github.com/amccarty/weather-prediction.git
-cd weather-prediction
+git clone https://github.com/amccarty/climate-prediction.git
+cd climate-prediction
 
 # Install dependencies
 pip install -r requirements.txt

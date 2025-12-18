@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Impact Predictor - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌍 Climate Impact Predictor</h1>
+            <p class="subtitle">Real-time climate change predictions powered by ML</p>
+        </header>
+
+        <div class="controls">
+            <label for="regionSelect">Select Region:</label>
+            <select id="regionSelect">
+                <option value="Austin, TX">Austin, TX</option>
+                <option value="Miami, FL">Miami, FL</option>
+                <option value="Phoenix, AZ">Phoenix, AZ</option>
+                <option value="Seattle, WA">Seattle, WA</option>
+            </select>
+            <button id="refreshBtn">Refresh Data</button>
+            <span id="dataMode" class="badge"></span>
+        </div>
+
+        <div id="loading" class="loading">Loading data...</div>
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="dashboard" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Current Temperature</h3>
+                    <p class="stat-value" id="currentTemp">--°C</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Data Status</h3>
+                    <p class="stat-value small" id="lastUpdated">--</p>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Temperature Change Predictions</h3>
+                    <canvas id="tempChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Precipitation Change Predictions</h3>
+                    <canvas id="precipChart"></canvas>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Extreme Event Probabilities</h2>
+                <div class="events-grid" id="eventsGrid">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Active Alerts</h2>
+                <div id="alertsContainer">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <div class="api-info">
+                <h3>API Information</h3>
+                <p><strong>Training Run:</strong> <span id="trainingRunId">--</span></p>
+                <p><strong>Refresh Run:</strong> <span id="refreshRunId">--</span></p>
+                <p><strong>API Status:</strong> <span id="apiStatus">--</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -5,15 +5,15 @@ Scheduled flow that runs every 6 hours to fetch latest climate observations
 and update predictions using trained models.
 """
 
-from metaflow import FlowSpec, step, schedule, conda, resources, current
+from metaflow import FlowSpec, step, schedule, resources, current
 from datetime import datetime
 
+# @schedule(cron='0 */12 * * *')  # Every 12 hours (configured in obproject.toml)
 class ClimateDataRefreshFlow(FlowSpec):
     """
     Scheduled flow to fetch latest climate data and update predictions
     """
-    
-    @schedule(cron='0 */6 * * *')  # Every 6 hours
+
     @step
     def start(self):
         """Fetch latest climate observations"""
@@ -30,7 +30,6 @@ class ClimateDataRefreshFlow(FlowSpec):
         
         self.next(self.fetch_current_observations, foreach='regions')
     
-    @conda(packages={'requests': '2.31.0', 'xarray': '2023.12.0'})
     @step
     def fetch_current_observations(self):
         """Fetch latest weather and satellite data for region"""
@@ -56,8 +55,7 @@ class ClimateDataRefreshFlow(FlowSpec):
         
         self.next(self.process_observations)
     
-    @resources(gpu=1, memory=16000)
-    @conda(packages={'torch': '2.1.0'})
+    @resources(cpu=4, memory=16000)
     @step
     def process_observations(self):
         """Run inference on latest data"""
@@ -99,20 +97,25 @@ class ClimateDataRefreshFlow(FlowSpec):
     def join_regions(self, inputs):
         """Aggregate predictions across all regions"""
         print("Aggregating predictions from all regions...")
-        
+
+        # Preserve fetch_timestamp from start
+        self.fetch_timestamp = inputs[0].fetch_timestamp
+
         self.all_predictions = {}
         self.all_anomalies = []
-        
+
+        region_count = 0
         for input_data in inputs:
+            region_count += 1
             region_name = input_data.input['name']
             self.all_predictions[region_name] = input_data.predictions
-            
+
             if input_data.anomalies:
                 self.all_anomalies.extend(input_data.anomalies)
-        
-        print(f"Processed {len(inputs)} regions")
+
+        print(f"Processed {region_count} regions")
         print(f"Detected {len(self.all_anomalies)} anomalies")
-        
+
         self.next(self.update_feature_store)
     
     @step

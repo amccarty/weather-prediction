@@ -17,8 +17,8 @@ This guide will help you get up and running with the Climate Change Impact Predi
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/amccarty/weather-prediction.git
-cd weather-prediction
+git clone https://github.com/amccarty/climate-prediction.git
+cd climate-prediction
 ```
 
 ### 2. Set Up Python Environment

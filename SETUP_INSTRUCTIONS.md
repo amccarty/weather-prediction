@@ -2,17 +2,17 @@
 
 ## Project Created Successfully! 🎉
 
-The `weather-prediction` project structure has been created locally at `/tmp/weather-prediction`.
+The `climate-prediction` project structure has been created locally at `/tmp/climate-prediction`.
 
 ## Next Steps to Push to GitHub
 
 ### 1. Create the GitHub Repository
 
-You need to create a new repository on GitHub at: **github.com/amccarty/weather-prediction**
+You need to create a new repository on GitHub at: **github.com/amccarty/climate-prediction**
 
 Option A: Via GitHub Web Interface
 1. Go to https://github.com/new
-2. Repository name: `weather-prediction`
+2. Repository name: `climate-prediction`
 3. Description: "Climate Change Impact Predictor using ML and public datasets"
 4. Choose Public or Private
 5. **Do NOT** initialize with README, .gitignore, or license (we have these already)
@@ -20,7 +20,7 @@ Option A: Via GitHub Web Interface
 
 Option B: Via GitHub CLI
 ```bash
-gh repo create amccarty/weather-prediction --public --description "Climate Change Impact Predictor using ML and public datasets"
+gh repo create amccarty/climate-prediction --public --description "Climate Change Impact Predictor using ML and public datasets"
 ```
 
 ### 2. Push the Local Repository to GitHub
@@ -28,10 +28,10 @@ gh repo create amccarty/weather-prediction --public --description "Climate Chang
 From the project directory:
 
 ```bash
-cd /tmp/weather-prediction
+cd /tmp/climate-prediction
 
 # Set the remote URL
-git remote add origin https://github.com/amccarty/weather-prediction.git
+git remote add origin https://github.com/amccarty/climate-prediction.git
 
 # Rename branch to main (if needed)
 git branch -M main
@@ -60,7 +60,7 @@ It will automatically run on:
 ## Project Structure Overview
 
 ```
-weather-prediction/
+climate-prediction/
 ├── .github/workflows/     # CI/CD configuration
 │   └── ci.yml            # GitHub Actions workflow
 ├── data/                 # Data assets
