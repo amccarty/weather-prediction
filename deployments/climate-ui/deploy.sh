@@ -9,10 +9,8 @@ PROJECT_NAME="climate-prediction"
 
 if [ "$ENVIRONMENT" = "production" ]; then
   APP_NAME="climate-ui"
-  REPLICAS=2
 else
   APP_NAME="climate-ui-stg"
-  REPLICAS=1
 fi
 
 echo "========================================="
@@ -21,7 +19,6 @@ echo "========================================="
 echo "Environment: $ENVIRONMENT"
 echo "App Name: $APP_NAME"
 echo "Project: $PROJECT_NAME"
-echo "Replicas: $REPLICAS"
 echo "========================================="
 
 outerbounds app deploy \
@@ -32,10 +29,6 @@ outerbounds app deploy \
   --dep-from-requirements requirements.txt \
   --cpu 1 \
   --memory 2048 \
-  --fixed-replicas "$REPLICAS" \
-  --min-replicas 1 \
-  --max-replicas "$REPLICAS" \
-  --scaling-rpm 60 \
   --public-access --port 8001 \
   python app.py
 
