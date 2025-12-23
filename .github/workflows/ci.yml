@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -62,46 +62,6 @@ jobs:
           python $flow show
         done
 
-  deploy-staging:
-    name: Deploy to Staging
-    needs: [test, validate-flows]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install outerbounds
-
-    - name: Deploy Training Flow to Staging
-      run: |
-        cd flows
-        python climate_training_flow.py run
-
-    - name: Deploy Refresh Flow to Staging
-      run: |
-        cd flows
-        python climate_data_refresh_flow.py run
-
-    - name: Deploy API to Outerbounds Staging
-      run: |
-        chmod +x deployments/climate-api/deploy.sh
-        ./deployments/climate-api/deploy.sh staging
-
-    - name: Deploy UI to Outerbounds Staging
-      run: |
-        chmod +x deployments/climate-ui/deploy.sh
-        ./deployments/climate-ui/deploy.sh staging
-
   deploy-production:
     name: Deploy to Production
     needs: [test, validate-flows]
@@ -122,16 +82,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install outerbounds
-
-    - name: Deploy Training Flow to Production
-      run: |
-        cd flows
-        python climate_training_flow.py run
-
-    - name: Deploy Refresh Flow to Production
-      run: |
-        cd flows
-        python climate_data_refresh_flow.py run
 
     - name: Deploy API to Outerbounds Production
       run: |
