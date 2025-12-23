@@ -73,18 +73,21 @@ class ClimateDataRefreshFlow(ProjectFlow):
         """Aggregate predictions from all regions"""
         print("Aggregating predictions from all regions...")
 
-        self.fetch_timestamp = inputs[0].fetch_timestamp
+        # Convert inputs to list to get length
+        inputs_list = list(inputs)
+
+        self.fetch_timestamp = inputs_list[0].fetch_timestamp
         self.all_predictions = {}
         self.all_anomalies = []
 
-        for input_data in inputs:
+        for input_data in inputs_list:
             region_name = input_data.input["name"]
             self.all_predictions[region_name] = input_data.predictions
 
             if input_data.anomalies:
                 self.all_anomalies.extend(input_data.anomalies)
 
-        print(f"Processed {len(inputs)} regions")
+        print(f"Processed {len(inputs_list)} regions")
         print(f"Detected {len(self.all_anomalies)} anomalies")
 
         self.next(self.end)
