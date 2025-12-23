@@ -54,8 +54,8 @@ jobs:
 
     - name: Configure Outerbounds
       run: |
-        PROJECT_NAME=$(grep "^project = " obproject.toml | cut -d "'" -f 2)
-        PLATFORM=$(grep "^platform = " obproject.toml | cut -d "'" -f 2)
+        PROJECT_NAME=climate-prediction
+        PLATFORM=merced.obp.outerbounds.com
         outerbounds service-principal-configure \
           --name "$PROJECT_NAME" \
           --deployment-domain "$PLATFORM" \
