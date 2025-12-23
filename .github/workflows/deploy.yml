@@ -54,11 +54,19 @@ jobs:
 
     - name: Configure Outerbounds
       run: |
-        PROJECT_NAME=climate-prediction
-        PLATFORM=merced.obp.outerbounds.com
+        PROJECT_NAME=$(yq .project obproject.toml)
+        DEFAULT_CICD_USER="${PROJECT_NAME//_/-}-cicd"
+        PLATFORM=$(yq .platform obproject.toml)
+        CICD_USER=$(yq ".cicd_user // \"$DEFAULT_CICD_USER\"")
+        PERIMETER="default"
+        echo "🏗️ Deployment target:"
+        echo "  Platform: $PLATFORM"
+        echo "  CI/CD User: $CICD_USER"
+        echo "  Perimeter: $PERIMETER"
         outerbounds service-principal-configure \
-          --name "$PROJECT_NAME" \
-          --deployment-domain "$PLATFORM" \
+          --name $CICD_USER \
+          --deployment-domain $PLATFORM \
+          --perimeter $PERIMETER \
           --github-actions
 
     - name: Deploy Project
