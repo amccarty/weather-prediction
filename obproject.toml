@@ -1,5 +1,5 @@
 platform = 'merced.obp.outerbounds.com'
-project = 'climate-prediction'
+project = 'climate_prediction'
 title = 'Climate Change Impact Predictor'
 
 [dev-assets]
