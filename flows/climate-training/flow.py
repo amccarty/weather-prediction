@@ -4,10 +4,11 @@ Climate Model Training Flow
 This flow trains ML models to predict climate impacts based on historical patterns.
 """
 
-from metaflow import FlowSpec, step, Parameter
+from metaflow import step, Parameter
+from obproject import ProjectFlow
 
 
-class ClimateTrainingFlow(FlowSpec):
+class ClimateTrainingFlow(ProjectFlow):
     """
     Train models to predict climate impacts
     """

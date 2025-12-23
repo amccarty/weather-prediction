@@ -4,11 +4,12 @@ Climate Data Refresh Flow
 Scheduled flow that fetches latest climate observations and generates predictions.
 """
 
-from metaflow import FlowSpec, step
+from metaflow import step
+from obproject import ProjectFlow
 from datetime import datetime
 
 
-class ClimateDataRefreshFlow(FlowSpec):
+class ClimateDataRefreshFlow(ProjectFlow):
     """
     Fetch latest climate data and generate predictions for all regions
     """
