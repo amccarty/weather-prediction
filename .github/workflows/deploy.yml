@@ -46,23 +46,24 @@ jobs:
       with:
         python-version: '3.12'
 
-    - name: Install Outerbounds
+    - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install outerbounds pyyaml
+        python3 -m pip install -U requests
+        python3 -m pip install outerbounds pyyaml
+        python3 -m pip install -U ob-project-utils
 
     - name: Configure Outerbounds
       run: |
         PROJECT_NAME=$(grep "^project = " obproject.toml | cut -d "'" -f 2)
         PLATFORM=$(grep "^platform = " obproject.toml | cut -d "'" -f 2)
-        obproject configure \
+        outerbounds service-principal-configure \
           --project "$PROJECT_NAME" \
           --user "ci-cd" \
           --platform "$PLATFORM"
 
     - name: Deploy Project
       run: |
-        obproject deploy
+        obproject-deploy
       env:
         GITHUB_TOKEN: ${{ github.token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
