@@ -1,0 +1,1 @@
+{"5d4e65bf983a3fb1cb174abe59f6befd": {"success": {"bakingStats": null, "containerImage": "fast-bakery.merced.obp.outerbounds.com/default/unassailable-rottweiler:enifpvw9zi-oci-zstd", "metadata": {"coordinatorImageTag": "v1.22.0-452f9720-1766080379"}, "pythonPath": "/opt/outerbounds/fastbakery/bin/python"}}}

@@ -1,0 +1,5 @@
+provider = "metaflow"
+name = "Extreme Events Classifier"
+id = "extreme-events"
+kind = "xgboost"
+description = "XGBoost classifier for predicting extreme weather event probabilities"

@@ -1,0 +1,5 @@
+provider = "metaflow"
+name = "Temperature Predictor"
+id = "temperature-predictor"
+kind = "transformer"
+description = "Transformer-based model for predicting temperature changes over time"

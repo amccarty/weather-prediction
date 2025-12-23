@@ -1,0 +1,5 @@
+provider = "metaflow"
+name = "Precipitation Predictor"
+id = "precipitation-predictor"
+kind = "lstm"
+description = "LSTM-based model for predicting precipitation patterns"

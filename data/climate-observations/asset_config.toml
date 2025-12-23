@@ -1,0 +1,5 @@
+provider = "metaflow"
+name = "Climate Observations"
+id = "climate-observations"
+kind = "timeseries"
+description = "Historical climate data from NOAA, MODIS, and ERA5 sources"
