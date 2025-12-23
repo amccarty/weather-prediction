@@ -1,0 +1,10 @@
+name: climate-api
+type: fastapi
+
+resources:
+  cpu: 2
+  memory: 8GB
+
+replicas: 1
+
+command: uvicorn app:app --host 0.0.0.0 --port 8000

@@ -1,27 +1,25 @@
 """
 Climate Data Refresh Flow
 
-Scheduled flow that runs every 6 hours to fetch latest climate observations
-and update predictions using trained models.
+Scheduled flow that fetches latest climate observations and generates predictions.
 """
 
-from metaflow import FlowSpec, step, resources
+from metaflow import FlowSpec, step
 from datetime import datetime
 
 
-# @schedule(cron='0 */12 * * *')  # Every 12 hours (configured in obproject.toml)
 class ClimateDataRefreshFlow(FlowSpec):
     """
-    Scheduled flow to fetch latest climate data and update predictions
+    Fetch latest climate data and generate predictions for all regions
     """
 
     @step
     def start(self):
-        """Fetch latest climate observations"""
+        """Initialize data refresh"""
         self.fetch_timestamp = datetime.now()
         print(f"Data refresh triggered at {self.fetch_timestamp}")
 
-        # Define regions to monitor
+        # Define the 4 regions to monitor
         self.regions = [
             {"name": "Austin, TX", "lat": 30.2672, "lon": -97.7431},
             {"name": "Miami, FL", "lat": 25.7617, "lon": -80.1918},
@@ -29,33 +27,20 @@ class ClimateDataRefreshFlow(FlowSpec):
             {"name": "Seattle, WA", "lat": 47.6062, "lon": -122.3321},
         ]
 
-        self.next(self.fetch_current_observations, foreach="regions")
+        self.next(self.fetch_and_predict, foreach="regions")
 
     @step
-    def fetch_current_observations(self):
-        """Fetch latest weather and satellite data for region"""
+    def fetch_and_predict(self):
+        """Fetch data and generate predictions for each region"""
         region = self.input
-        print(f"Fetching data for {region['name']}...")
+        print(f"Processing {region['name']}...")
 
-        # TODO: Implement actual data fetching
+        # TODO: Fetch actual weather data from APIs
         self.current_weather = {
             "temperature": 25.5,
             "precipitation": 0.0,
             "wind_speed": 12.3,
         }
-
-        self.current_satellite = {"land_surface_temp": 28.2, "ndvi": 0.65}
-
-        self.current_era5 = {"surface_pressure": 1013.2, "solar_radiation": 450.0}
-
-        self.next(self.process_observations)
-
-    @resources(cpu=4, memory=16000)
-    @step
-    def process_observations(self):
-        """Run inference on latest data"""
-        region = self.input
-        print(f"Generating predictions for {region['name']}...")
 
         # TODO: Load trained models and run inference
         self.predictions = {
@@ -69,7 +54,7 @@ class ClimateDataRefreshFlow(FlowSpec):
             },
         }
 
-        # Detect anomalies
+        # Detect high-risk anomalies
         self.anomalies = []
         if self.predictions["extreme_events"]["heatwave"] > 0.20:
             self.anomalies.append(
@@ -80,59 +65,26 @@ class ClimateDataRefreshFlow(FlowSpec):
                 }
             )
 
-        self.next(self.join_regions)
+        self.next(self.join)
 
     @step
-    def join_regions(self, inputs):
-        """Aggregate predictions across all regions"""
+    def join(self, inputs):
+        """Aggregate predictions from all regions"""
         print("Aggregating predictions from all regions...")
 
-        # Preserve fetch_timestamp from start
         self.fetch_timestamp = inputs[0].fetch_timestamp
-
         self.all_predictions = {}
         self.all_anomalies = []
 
-        region_count = 0
         for input_data in inputs:
-            region_count += 1
             region_name = input_data.input["name"]
             self.all_predictions[region_name] = input_data.predictions
 
             if input_data.anomalies:
                 self.all_anomalies.extend(input_data.anomalies)
 
-        print(f"Processed {region_count} regions")
+        print(f"Processed {len(inputs)} regions")
         print(f"Detected {len(self.all_anomalies)} anomalies")
-
-        self.next(self.update_feature_store)
-
-    @step
-    def update_feature_store(self):
-        """Write latest features and predictions to storage"""
-        print("Updating feature store...")
-
-        # TODO: Write to S3 or feature store
-        # For now, just log
-        print(f"Stored predictions for {len(self.all_predictions)} regions")
-        print(f"Timestamp: {self.fetch_timestamp}")
-
-        self.next(self.check_alerts)
-
-    @step
-    def check_alerts(self):
-        """Check if any anomalies warrant alerts"""
-        if self.all_anomalies:
-            print(f"⚠️  Found {len(self.all_anomalies)} climate alerts:")
-            for anomaly in self.all_anomalies:
-                print(
-                    f"  - {anomaly['type']} in {anomaly['region']}: "
-                    f"{anomaly['probability']:.2%} probability"
-                )
-
-            # TODO: Send actual alerts (email, Slack, etc.)
-        else:
-            print("✓ No significant anomalies detected")
 
         self.next(self.end)
 
@@ -140,7 +92,7 @@ class ClimateDataRefreshFlow(FlowSpec):
     def end(self):
         """Complete data refresh"""
         print(f"Data refresh complete at {datetime.now()}")
-        print("Next refresh in 6 hours")
+        print(f"Predictions available for {len(self.all_predictions)} regions")
 
 
 if __name__ == "__main__":

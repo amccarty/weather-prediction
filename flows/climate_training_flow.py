@@ -2,20 +2,14 @@
 Climate Model Training Flow
 
 This flow trains ML models to predict climate impacts based on historical patterns.
-It fetches data from multiple public sources (NOAA, NASA MODIS, ERA5), performs
-feature engineering, and trains three models:
-1. Temperature prediction (Transformer)
-2. Precipitation prediction (LSTM)
-3. Extreme event classification (XGBoost)
 """
 
-from metaflow import FlowSpec, step, card, resources, Parameter
-from metaflow.cards import Markdown
+from metaflow import FlowSpec, step, Parameter
 
 
 class ClimateTrainingFlow(FlowSpec):
     """
-    Train models to predict climate impacts based on historical patterns
+    Train models to predict climate impacts
     """
 
     region = Parameter(
@@ -24,242 +18,60 @@ class ClimateTrainingFlow(FlowSpec):
         default="30.2672,-97.7431,50",  # Austin, TX
     )
 
-    lookback_years = Parameter(
-        "lookback_years", help="Years of historical data to use", default=30
-    )
-
     @step
     def start(self):
         """Initialize training pipeline"""
-        # Parse region parameters
         lat, lon, radius_km = map(float, self.region.split(","))
         self.lat = lat
         self.lon = lon
         self.radius_km = radius_km
 
-        print(f"Training model for region: {lat}, {lon} ({radius_km}km radius)")
-        print(f"Using {self.lookback_years} years of historical data")
+        print(f"Training models for region: {lat}, {lon} ({radius_km}km radius)")
+        self.next(self.load_data)
 
-        self.next(
-            self.fetch_noaa_data, self.fetch_satellite_data, self.fetch_reanalysis_data
-        )
-
-    @resources(memory=16000, cpu=4)
     @step
-    def fetch_noaa_data(self):
-        """Fetch NOAA weather station data"""
-        print("Fetching NOAA weather station data...")
+    def load_data(self):
+        """Load historical climate data"""
+        print("Loading historical climate data...")
 
-        # TODO: Implement actual NOAA data fetching
+        # TODO: Implement actual data loading from NOAA, MODIS, ERA5
         # For now, create placeholder structure
-        self.noaa_data = {
+        self.historical_data = {
             "temperature": [],
             "precipitation": [],
-            "wind_speed": [],
-            "timestamps": [],
+            "extreme_events": [],
         }
 
-        print(f"Fetched NOAA data for {self.lookback_years} years")
-        self.next(self.join_data)
-
-    @resources(memory=32000, cpu=8)
-    @step
-    def fetch_satellite_data(self):
-        """Fetch NASA MODIS satellite imagery"""
-        print("Fetching NASA MODIS satellite data...")
-
-        # TODO: Implement actual MODIS data fetching
-        # For now, create placeholder structure
-        self.satellite_data = {
-            "land_surface_temp": [],
-            "ndvi": [],
-            "albedo": [],
-            "timestamps": [],
-        }
-
-        print("Fetched satellite imagery composites")
-        self.next(self.join_data)
-
-    @resources(memory=24000, cpu=4)
-    @step
-    def fetch_reanalysis_data(self):
-        """Fetch ERA5 climate reanalysis data"""
-        print("Fetching ERA5 reanalysis data...")
-
-        # TODO: Implement actual ERA5 data fetching
-        # For now, create placeholder structure
-        self.era5_data = {
-            "temperature_2m": [],
-            "total_precipitation": [],
-            "surface_pressure": [],
-            "solar_radiation": [],
-            "timestamps": [],
-        }
-
-        print("Fetched ERA5 reanalysis data")
-        self.next(self.join_data)
+        print("Data loading complete")
+        self.next(self.train_models)
 
     @step
-    def join_data(self, inputs):
-        """Merge all data sources into unified dataset"""
-        print("Merging data sources...")
-
-        # Merge attributes from any input (they all have the same values from start)
-        self.merge_artifacts(inputs, include=["lat", "lon", "radius_km"])
-
-        # Combine data from parallel branches
-        self.combined_data = {
-            "noaa": inputs.fetch_noaa_data.noaa_data,
-            "satellite": inputs.fetch_satellite_data.satellite_data,
-            "era5": inputs.fetch_reanalysis_data.era5_data,
-        }
-
-        print("Data merge complete")
-        self.next(self.feature_engineering)
-
-    @step
-    def feature_engineering(self):
-        """Create features for ML models"""
-        print("Engineering features...")
-
-        # TODO: Implement actual feature engineering
-        # Create placeholder features
-        self.features = {
-            "temp_anomalies": [],
-            "precip_trends": [],
-            "vegetation_stress": [],
-            "urban_heat_island": [],
-            "extreme_event_freq": [],
-        }
-
-        self.targets = {"temperature": [], "precipitation": [], "extreme_events": []}
-
-        print("Feature engineering complete")
-        self.next(
-            self.train_temperature_model,
-            self.train_precipitation_model,
-            self.train_extreme_events_model,
-        )
-
-    @resources(cpu=4, memory=32000)
-    @step
-    def train_temperature_model(self):
-        """Train temperature prediction model (Transformer-based)"""
-        print("Training temperature prediction model...")
+    def train_models(self):
+        """Train all prediction models"""
+        print("Training climate prediction models...")
 
         # TODO: Implement actual model training
-        self.temp_model = {"model_type": "transformer", "status": "trained"}
-        self.temp_metrics = {"mae": 0.85, "rmse": 1.12, "r2": 0.94}
-
-        print("Temperature model training complete")
-        self.next(self.join_models)
-
-    @resources(cpu=4, memory=32000)
-    @step
-    def train_precipitation_model(self):
-        """Train precipitation pattern prediction"""
-        print("Training precipitation model...")
-
-        # TODO: Implement actual model training
-        self.precip_model = {"model_type": "lstm", "status": "trained"}
-        self.precip_metrics = {"mae": 2.3, "rmse": 3.1, "r2": 0.87}
-
-        print("Precipitation model training complete")
-        self.next(self.join_models)
-
-    @resources(cpu=4, memory=24000)
-    @step
-    def train_extreme_events_model(self):
-        """Train extreme weather event classifier"""
-        print("Training extreme events classifier...")
-
-        # TODO: Implement actual model training
-        self.extreme_model = {"model_type": "xgboost", "status": "trained"}
-        self.extreme_metrics = {
-            "accuracy": 0.92,
-            "precision": 0.89,
-            "recall": 0.91,
-            "f1": 0.90,
-        }
-
-        print("Extreme events model training complete")
-        self.next(self.join_models)
-
-    @card
-    @step
-    def join_models(self, inputs):
-        """Combine all models and create evaluation dashboard"""
-        print("Combining models and generating evaluation cards...")
-
-        # Merge attributes from inputs
-        self.merge_artifacts(inputs, include=["lat", "lon", "radius_km"])
-
-        # Store all models
+        # Train three models: temperature, precipitation, extreme events
         self.models = {
-            "temperature": inputs.train_temperature_model.temp_model,
-            "precipitation": inputs.train_precipitation_model.precip_model,
-            "extreme_events": inputs.train_extreme_events_model.extreme_model,
+            "temperature": {"type": "transformer", "trained": True},
+            "precipitation": {"type": "lstm", "trained": True},
+            "extreme_events": {"type": "xgboost", "trained": True},
         }
 
         self.metrics = {
-            "temperature": inputs.train_temperature_model.temp_metrics,
-            "precipitation": inputs.train_precipitation_model.precip_metrics,
-            "extreme_events": inputs.train_extreme_events_model.extreme_metrics,
+            "temperature": {"mae": 0.85, "r2": 0.94},
+            "precipitation": {"mae": 2.3, "r2": 0.87},
+            "extreme_events": {"accuracy": 0.92, "f1": 0.90},
         }
 
-        # Generate Metaflow card
-        from metaflow import current
-
-        current.card.append(Markdown("# Climate Model Training Results"))
-        current.card.append(Markdown(f"## Region: {self.lat}, {self.lon}"))
-        current.card.append(
-            Markdown(f"## Lookback Period: {self.lookback_years} years")
-        )
-
-        # Add metrics
-        current.card.append(Markdown("### Model Performance Metrics"))
-        current.card.append(Markdown("**Temperature Model (Transformer)**"))
-        current.card.append(Markdown(f"- MAE: {self.metrics['temperature']['mae']}°C"))
-        current.card.append(
-            Markdown(f"- RMSE: {self.metrics['temperature']['rmse']}°C")
-        )
-        current.card.append(Markdown(f"- R²: {self.metrics['temperature']['r2']}"))
-
-        current.card.append(Markdown("**Precipitation Model (LSTM)**"))
-        current.card.append(
-            Markdown(f"- MAE: {self.metrics['precipitation']['mae']} mm")
-        )
-        current.card.append(
-            Markdown(f"- RMSE: {self.metrics['precipitation']['rmse']} mm")
-        )
-        current.card.append(Markdown(f"- R²: {self.metrics['precipitation']['r2']}"))
-
-        current.card.append(Markdown("**Extreme Events Model (XGBoost)**"))
-        current.card.append(
-            Markdown(f"- Accuracy: {self.metrics['extreme_events']['accuracy']}")
-        )
-        current.card.append(
-            Markdown(f"- Precision: {self.metrics['extreme_events']['precision']}")
-        )
-        current.card.append(
-            Markdown(f"- Recall: {self.metrics['extreme_events']['recall']}")
-        )
-        current.card.append(
-            Markdown(f"- F1 Score: {self.metrics['extreme_events']['f1']}")
-        )
-
+        print("Model training complete")
         self.next(self.end)
 
     @step
     def end(self):
-        """Save models for deployment"""
-        from metaflow import current
-
+        """Save trained models"""
         print("Training complete. Models ready for deployment.")
-        print(f"Run ID: {current.run_id}")
-        print(
-            f"View results: https://ui.outerbounds.com/flows/{current.flow_name}/{current.run_id}"
-        )
+        print(f"Trained models: {list(self.models.keys())}")
 
 
 if __name__ == "__main__":

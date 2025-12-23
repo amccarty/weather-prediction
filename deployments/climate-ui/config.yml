@@ -1,0 +1,10 @@
+name: climate-ui
+type: streamlit
+
+resources:
+  cpu: 1
+  memory: 2GB
+
+replicas: 1
+
+command: streamlit run app.py --server.port 8001 --server.address 0.0.0.0
